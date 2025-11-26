@@ -121,11 +121,79 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
+exports.Prisma.DocumentScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  originalName: 'originalName',
+  storagePath: 'storagePath',
+  extractedText: 'extractedText',
+  pageCount: 'pageCount',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DatasetScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DatasetDocumentScalarFieldEnum = {
+  id: 'id',
+  datasetId: 'datasetId',
+  documentId: 'documentId',
+  groundTruth: 'groundTruth'
+};
+
+exports.Prisma.PromptTemplateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  version: 'version',
+  systemPrompt: 'systemPrompt',
+  userPrompt: 'userPrompt',
+  outputSchema: 'outputSchema',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ModelConfigScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  modelId: 'modelId',
+  displayName: 'displayName',
+  isActive: 'isActive'
+};
+
+exports.Prisma.EvalRunScalarFieldEnum = {
+  id: 'id',
+  datasetId: 'datasetId',
+  promptId: 'promptId',
+  modelConfigId: 'modelConfigId',
+  status: 'status',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  aggregateScore: 'aggregateScore',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EvalResultScalarFieldEnum = {
+  id: 'id',
+  evalRunId: 'evalRunId',
+  documentId: 'documentId',
+  rawOutput: 'rawOutput',
+  parsedOutput: 'parsedOutput',
+  latencyMs: 'latencyMs',
+  tokenUsage: 'tokenUsage',
+  autoScore: 'autoScore'
+};
+
+exports.Prisma.HumanReviewScalarFieldEnum = {
+  id: 'id',
+  evalResultId: 'evalResultId',
+  reviewerId: 'reviewerId',
+  score: 'score',
+  entityScores: 'entityScores',
+  notes: 'notes',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -133,14 +201,37 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+
 
 exports.Prisma.ModelName = {
-  Post: 'Post'
+  Document: 'Document',
+  Dataset: 'Dataset',
+  DatasetDocument: 'DatasetDocument',
+  PromptTemplate: 'PromptTemplate',
+  ModelConfig: 'ModelConfig',
+  EvalRun: 'EvalRun',
+  EvalResult: 'EvalResult',
+  HumanReview: 'HumanReview'
 };
 
 /**

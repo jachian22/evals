@@ -93,11 +93,79 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
+exports.Prisma.DocumentScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  originalName: 'originalName',
+  storagePath: 'storagePath',
+  extractedText: 'extractedText',
+  pageCount: 'pageCount',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DatasetScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DatasetDocumentScalarFieldEnum = {
+  id: 'id',
+  datasetId: 'datasetId',
+  documentId: 'documentId',
+  groundTruth: 'groundTruth'
+};
+
+exports.Prisma.PromptTemplateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  version: 'version',
+  systemPrompt: 'systemPrompt',
+  userPrompt: 'userPrompt',
+  outputSchema: 'outputSchema',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ModelConfigScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  modelId: 'modelId',
+  displayName: 'displayName',
+  isActive: 'isActive'
+};
+
+exports.Prisma.EvalRunScalarFieldEnum = {
+  id: 'id',
+  datasetId: 'datasetId',
+  promptId: 'promptId',
+  modelConfigId: 'modelConfigId',
+  status: 'status',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  aggregateScore: 'aggregateScore',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EvalResultScalarFieldEnum = {
+  id: 'id',
+  evalRunId: 'evalRunId',
+  documentId: 'documentId',
+  rawOutput: 'rawOutput',
+  parsedOutput: 'parsedOutput',
+  latencyMs: 'latencyMs',
+  tokenUsage: 'tokenUsage',
+  autoScore: 'autoScore'
+};
+
+exports.Prisma.HumanReviewScalarFieldEnum = {
+  id: 'id',
+  evalResultId: 'evalResultId',
+  reviewerId: 'reviewerId',
+  score: 'score',
+  entityScores: 'entityScores',
+  notes: 'notes',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -105,14 +173,37 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+
 
 exports.Prisma.ModelName = {
-  Post: 'Post'
+  Document: 'Document',
+  Dataset: 'Dataset',
+  DatasetDocument: 'DatasetDocument',
+  PromptTemplate: 'PromptTemplate',
+  ModelConfig: 'ModelConfig',
+  EvalRun: 'EvalRun',
+  EvalResult: 'EvalResult',
+  HumanReview: 'HumanReview'
 };
 /**
  * Create the Client
@@ -153,7 +244,6 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -162,13 +252,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Post {\n  id        Int      @id @default(autoincrement())\n  name      String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@index([name])\n}\n",
-  "inlineSchemaHash": "4dfee2d805d63053d5ae63a6ff65a5c68e353713bdd4147909d9158ea83d8e0f",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Document {\n  id            String   @id @default(cuid())\n  name          String\n  originalName  String\n  storagePath   String\n  extractedText String   @db.Text\n  pageCount     Int\n  createdAt     DateTime @default(now())\n\n  datasetDocs DatasetDocument[]\n  evalResults EvalResult[]\n}\n\nmodel Dataset {\n  id          String   @id @default(cuid())\n  name        String\n  description String?\n  createdAt   DateTime @default(now())\n\n  documents DatasetDocument[]\n  evalRuns  EvalRun[]\n}\n\nmodel DatasetDocument {\n  id          String @id @default(cuid())\n  datasetId   String\n  documentId  String\n  groundTruth Json?\n\n  dataset  Dataset  @relation(fields: [datasetId], references: [id], onDelete: Cascade)\n  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)\n\n  @@unique([datasetId, documentId])\n}\n\nmodel PromptTemplate {\n  id           String   @id @default(cuid())\n  name         String\n  version      Int      @default(1)\n  systemPrompt String   @db.Text\n  userPrompt   String   @db.Text\n  outputSchema Json?\n  createdAt    DateTime @default(now())\n\n  evalRuns EvalRun[]\n}\n\nmodel ModelConfig {\n  id          String  @id @default(cuid())\n  provider    String\n  modelId     String\n  displayName String\n  isActive    Boolean @default(true)\n\n  evalRuns EvalRun[]\n\n  @@unique([provider, modelId])\n}\n\nmodel EvalRun {\n  id             String    @id @default(cuid())\n  datasetId      String\n  promptId       String\n  modelConfigId  String\n  status         String    @default(\"pending\")\n  startedAt      DateTime?\n  completedAt    DateTime?\n  aggregateScore Json?\n\n  dataset     Dataset        @relation(fields: [datasetId], references: [id], onDelete: Cascade)\n  prompt      PromptTemplate @relation(fields: [promptId], references: [id], onDelete: Cascade)\n  modelConfig ModelConfig    @relation(fields: [modelConfigId], references: [id], onDelete: Cascade)\n  results     EvalResult[]\n\n  createdAt DateTime @default(now())\n}\n\nmodel EvalResult {\n  id           String @id @default(cuid())\n  evalRunId    String\n  documentId   String\n  rawOutput    String @db.Text\n  parsedOutput Json?\n  latencyMs    Int\n  tokenUsage   Json?\n  autoScore    Json?\n\n  evalRun     EvalRun      @relation(fields: [evalRunId], references: [id], onDelete: Cascade)\n  document    Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)\n  humanReview HumanReview?\n}\n\nmodel HumanReview {\n  id           String   @id @default(cuid())\n  evalResultId String   @unique\n  reviewerId   String?\n  score        Float\n  entityScores Json?\n  notes        String?  @db.Text\n  createdAt    DateTime @default(now())\n\n  evalResult EvalResult @relation(fields: [evalResultId], references: [id], onDelete: Cascade)\n}\n",
+  "inlineSchemaHash": "62ee26cc36e5ef8f82f9e3a93de442d3e5f4202a48016f37087750687588aa71",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Document\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"originalName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"storagePath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"extractedText\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pageCount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"datasetDocs\",\"kind\":\"object\",\"type\":\"DatasetDocument\",\"relationName\":\"DatasetDocumentToDocument\"},{\"name\":\"evalResults\",\"kind\":\"object\",\"type\":\"EvalResult\",\"relationName\":\"DocumentToEvalResult\"}],\"dbName\":null},\"Dataset\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"documents\",\"kind\":\"object\",\"type\":\"DatasetDocument\",\"relationName\":\"DatasetToDatasetDocument\"},{\"name\":\"evalRuns\",\"kind\":\"object\",\"type\":\"EvalRun\",\"relationName\":\"DatasetToEvalRun\"}],\"dbName\":null},\"DatasetDocument\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"datasetId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"documentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"groundTruth\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"dataset\",\"kind\":\"object\",\"type\":\"Dataset\",\"relationName\":\"DatasetToDatasetDocument\"},{\"name\":\"document\",\"kind\":\"object\",\"type\":\"Document\",\"relationName\":\"DatasetDocumentToDocument\"}],\"dbName\":null},\"PromptTemplate\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"version\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"systemPrompt\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userPrompt\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"outputSchema\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"evalRuns\",\"kind\":\"object\",\"type\":\"EvalRun\",\"relationName\":\"EvalRunToPromptTemplate\"}],\"dbName\":null},\"ModelConfig\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"provider\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"modelId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"displayName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"evalRuns\",\"kind\":\"object\",\"type\":\"EvalRun\",\"relationName\":\"EvalRunToModelConfig\"}],\"dbName\":null},\"EvalRun\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"datasetId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"promptId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"modelConfigId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"startedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"completedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"aggregateScore\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"dataset\",\"kind\":\"object\",\"type\":\"Dataset\",\"relationName\":\"DatasetToEvalRun\"},{\"name\":\"prompt\",\"kind\":\"object\",\"type\":\"PromptTemplate\",\"relationName\":\"EvalRunToPromptTemplate\"},{\"name\":\"modelConfig\",\"kind\":\"object\",\"type\":\"ModelConfig\",\"relationName\":\"EvalRunToModelConfig\"},{\"name\":\"results\",\"kind\":\"object\",\"type\":\"EvalResult\",\"relationName\":\"EvalResultToEvalRun\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"EvalResult\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"evalRunId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"documentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"rawOutput\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"parsedOutput\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"latencyMs\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"tokenUsage\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"autoScore\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"evalRun\",\"kind\":\"object\",\"type\":\"EvalRun\",\"relationName\":\"EvalResultToEvalRun\"},{\"name\":\"document\",\"kind\":\"object\",\"type\":\"Document\",\"relationName\":\"DocumentToEvalResult\"},{\"name\":\"humanReview\",\"kind\":\"object\",\"type\":\"HumanReview\",\"relationName\":\"EvalResultToHumanReview\"}],\"dbName\":null},\"HumanReview\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"evalResultId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"reviewerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"score\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"entityScores\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"notes\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"evalResult\",\"kind\":\"object\",\"type\":\"EvalResult\",\"relationName\":\"EvalResultToHumanReview\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

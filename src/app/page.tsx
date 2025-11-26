@@ -1,53 +1,161 @@
+import { api, HydrateClient } from "@/trpc/server";
 import Link from "next/link";
 
-import { LatestPost } from "@/app/_components/post";
-import { api, HydrateClient } from "@/trpc/server";
-
-export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
-
-  void api.post.getLatest.prefetch();
+export default async function Dashboard() {
+  const [recentEvals, datasets, prompts, reviewStats] = await Promise.all([
+    api.evals.list({ limit: 5 }),
+    api.datasets.list(),
+    api.prompts.list(),
+    api.reviews.getStats({}),
+  ]);
 
   return (
     <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-          </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
+      <div className="p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
+          <p className="text-text-secondary mt-1">
+            Overview of your PDF evaluation pipeline
+          </p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="metric-card">
+            <div className="metric-value">{datasets.length}</div>
+            <div className="metric-label">Datasets</div>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello ? hello.greeting : "Loading tRPC query..."}
+          <div className="metric-card">
+            <div className="metric-value">{prompts.length}</div>
+            <div className="metric-label">Prompt Templates</div>
+          </div>
+          <div className="metric-card">
+            <div className="metric-value">{reviewStats.pendingReviews}</div>
+            <div className="metric-label">Pending Reviews</div>
+          </div>
+          <div className="metric-card">
+            <div className="metric-value">
+              {reviewStats.totalReviews > 0
+                ? `${(reviewStats.averageScore * 100).toFixed(0)}%`
+                : "—"}
+            </div>
+            <div className="metric-label">Avg Review Score</div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <Link href="/documents" className="card hover:border-accent/50 transition-colors group">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">📄</span>
+              <h3 className="font-semibold text-text-primary group-hover:text-accent transition-colors">
+                Upload Documents
+              </h3>
+            </div>
+            <p className="text-sm text-text-secondary">
+              Add PDF documents to extract and evaluate
             </p>
+          </Link>
+
+          <Link href="/prompts" className="card hover:border-accent/50 transition-colors group">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">✏️</span>
+              <h3 className="font-semibold text-text-primary group-hover:text-accent transition-colors">
+                Create Prompt
+              </h3>
+            </div>
+            <p className="text-sm text-text-secondary">
+              Design prompts for entity extraction
+            </p>
+          </Link>
+
+          <Link href="/evals" className="card hover:border-accent/50 transition-colors group">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">🧪</span>
+              <h3 className="font-semibold text-text-primary group-hover:text-accent transition-colors">
+                Run Evaluation
+              </h3>
+            </div>
+            <p className="text-sm text-text-secondary">
+              Test prompts against datasets
+            </p>
+          </Link>
+        </div>
+
+        {/* Recent Evaluations */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-text-primary">
+              Recent Evaluations
+            </h2>
+            <Link
+              href="/evals"
+              className="text-sm text-accent hover:text-accent-hover"
+            >
+              View all →
+            </Link>
           </div>
 
-          <LatestPost />
+          {recentEvals.runs.length === 0 ? (
+            <div className="text-center py-8 text-text-tertiary">
+              <p>No evaluations yet</p>
+              <Link href="/evals" className="text-accent hover:text-accent-hover text-sm">
+                Run your first evaluation
+              </Link>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Dataset</th>
+                    <th>Prompt</th>
+                    <th>Model</th>
+                    <th>Status</th>
+                    <th>F1 Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentEvals.runs.map((run) => {
+                    const score = run.aggregateScore as {
+                      microF1?: number;
+                    } | null;
+                    return (
+                      <tr key={run.id}>
+                        <td className="font-medium">{run.dataset.name}</td>
+                        <td>
+                          {run.prompt.name} v{run.prompt.version}
+                        </td>
+                        <td>{run.modelConfig.displayName}</td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              run.status === "completed"
+                                ? "badge-success"
+                                : run.status === "failed"
+                                  ? "badge-error"
+                                  : run.status === "running"
+                                    ? "badge-warning"
+                                    : "badge-neutral"
+                            }`}
+                          >
+                            {run.status}
+                          </span>
+                        </td>
+                        <td>
+                          {score?.microF1 !== undefined
+                            ? `${(score.microF1 * 100).toFixed(1)}%`
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      </main>
+      </div>
     </HydrateClient>
   );
 }

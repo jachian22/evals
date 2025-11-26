@@ -11,11 +11,106 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Document {
+  id            String   @id @default(cuid())
+  name          String
+  originalName  String
+  storagePath   String
+  extractedText String   @db.Text
+  pageCount     Int
+  createdAt     DateTime @default(now())
 
-    @@index([name])
+  datasetDocs DatasetDocument[]
+  evalResults EvalResult[]
+}
+
+model Dataset {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  documents DatasetDocument[]
+  evalRuns  EvalRun[]
+}
+
+model DatasetDocument {
+  id          String @id @default(cuid())
+  datasetId   String
+  documentId  String
+  groundTruth Json?
+
+  dataset  Dataset  @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([datasetId, documentId])
+}
+
+model PromptTemplate {
+  id           String   @id @default(cuid())
+  name         String
+  version      Int      @default(1)
+  systemPrompt String   @db.Text
+  userPrompt   String   @db.Text
+  outputSchema Json?
+  createdAt    DateTime @default(now())
+
+  evalRuns EvalRun[]
+}
+
+model ModelConfig {
+  id          String  @id @default(cuid())
+  provider    String
+  modelId     String
+  displayName String
+  isActive    Boolean @default(true)
+
+  evalRuns EvalRun[]
+
+  @@unique([provider, modelId])
+}
+
+model EvalRun {
+  id             String    @id @default(cuid())
+  datasetId      String
+  promptId       String
+  modelConfigId  String
+  status         String    @default("pending")
+  startedAt      DateTime?
+  completedAt    DateTime?
+  aggregateScore Json?
+
+  dataset     Dataset        @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  prompt      PromptTemplate @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  modelConfig ModelConfig    @relation(fields: [modelConfigId], references: [id], onDelete: Cascade)
+  results     EvalResult[]
+
+  createdAt DateTime @default(now())
+}
+
+model EvalResult {
+  id           String @id @default(cuid())
+  evalRunId    String
+  documentId   String
+  rawOutput    String @db.Text
+  parsedOutput Json?
+  latencyMs    Int
+  tokenUsage   Json?
+  autoScore    Json?
+
+  evalRun     EvalRun      @relation(fields: [evalRunId], references: [id], onDelete: Cascade)
+  document    Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  humanReview HumanReview?
+}
+
+model HumanReview {
+  id           String   @id @default(cuid())
+  evalResultId String   @unique
+  reviewerId   String?
+  score        Float
+  entityScores Json?
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  evalResult EvalResult @relation(fields: [evalResultId], references: [id], onDelete: Cascade)
 }
