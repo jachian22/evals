@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
@@ -19,7 +19,7 @@ interface GroundTruth {
   entities?: Entity[];
 }
 
-export default function ReviewPage() {
+function ReviewPageContent() {
   const searchParams = useSearchParams();
   const resultIdFromUrl = searchParams.get("resultId");
 
@@ -351,6 +351,23 @@ export default function ReviewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReviewPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-text-primary">Review Queue</h1>
+            <p className="text-text-secondary mt-1">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <ReviewPageContent />
+    </Suspense>
   );
 }
 
