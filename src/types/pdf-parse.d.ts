@@ -1,4 +1,4 @@
-declare module "pdf-parse/lib/pdf-parse.js" {
+declare module "pdf-parse" {
   interface PDFData {
     numpages: number;
     numrender: number;
@@ -18,5 +18,11 @@ declare module "pdf-parse/lib/pdf-parse.js" {
   ): Promise<PDFData>;
 
   export default pdfParse;
+}
+
+// Also declare the lib path for webpack alias resolution
+declare module "pdf-parse/lib/pdf-parse.js" {
+  export * from "pdf-parse";
+  export { default } from "pdf-parse";
 }
 

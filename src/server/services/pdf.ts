@@ -1,6 +1,6 @@
-// Import from lib/pdf-parse to avoid the test file loading issue in pdf-parse v1.x
-// The main index.js tries to load a test PDF on import which fails in production
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
+// pdf-parse aliased in next.config.js to avoid the test file loading issue
+// See: https://gitlab.com/nicklasmoore/pdf-parse/-/issues/24
+import pdfParse from "pdf-parse";
 import path from "path";
 import crypto from "crypto";
 import { saveFile, readFile, deleteFile } from "./storage";
