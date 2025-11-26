@@ -1,29 +1,74 @@
-# Create T3 App
+# Evals (made simple)
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Evals is a web app built on the t3 stack for testing models and prompts against eachother for cases where you need to know your costs or accuracy bottlenecks for your LLM workflows. Notably I built this for flows involving PDF extraction but this can be easily modified for other document types.
 
-## What's next? How do I make an app with this?
-
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
-
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+For fun I used this as an opportunity to use tRPC for what it simplifies in maintainability as more models get released and new model providers come out of stealth; a core feature to any eval tool that will get real use.
 
 - [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
 - [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
 
-## Learn More
+## Getting Started
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+### Prerequisites
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+- Node.js 20+
+- pnpm (`corepack enable` or `npm install -g pnpm`)
+- PostgreSQL database
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Installation
 
-## How do I deploy this?
+```bash
+git clone <repo-url>
+cd evals
+pnpm install
+```
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### Environment Setup
+
+Create a `.env` file in the root directory:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/evals"
+
+# At least one API key required for running evals
+OPENAI_API_KEY="sk-..."
+ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+### Database Setup
+
+```bash
+# Generate Prisma client and run migrations
+pnpm db:generate
+
+# Or push schema directly (for development)
+pnpm db:push
+```
+
+### Development
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Other Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm build` | Production build |
+| `pnpm start` | Start production server |
+| `pnpm db:studio` | Open Prisma Studio |
+| `pnpm check` | Run linting and type checks |
+| `pnpm format:write` | Format code with Prettier |
+
+## Next Steps
+
+Right now it's a flexible MVP that's workable for many situations you'd want to setup evals for LLM work involving PDF data extraction. What I plan to add next:
+
+- cost parameters for comparisons
+- compartmentalizing different eval sets
+- solving for single run bias (averaging across several runs)
