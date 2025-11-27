@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure, viewerProcedure, adminProcedure } from "@/server/api/trpc";
 
 export const reviewsRouter = createTRPCRouter({
   // Get review queue - results without reviews
-  getQueue: publicProcedure
+  getQueue: viewerProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(50),
@@ -44,7 +44,7 @@ export const reviewsRouter = createTRPCRouter({
     }),
 
   // Get a specific result for review
-  getResultForReview: publicProcedure
+  getResultForReview: viewerProcedure
     .input(z.object({ resultId: z.string() }))
     .query(async ({ ctx, input }) => {
       const result = await ctx.db.evalResult.findUnique({
@@ -83,7 +83,7 @@ export const reviewsRouter = createTRPCRouter({
     }),
 
   // Submit a review
-  submit: publicProcedure
+  submit: adminProcedure
     .input(
       z.object({
         evalResultId: z.string(),
@@ -116,7 +116,7 @@ export const reviewsRouter = createTRPCRouter({
     }),
 
   // Update a review
-  update: publicProcedure
+  update: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -147,7 +147,7 @@ export const reviewsRouter = createTRPCRouter({
     }),
 
   // Delete a review
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.humanReview.delete({
@@ -158,7 +158,7 @@ export const reviewsRouter = createTRPCRouter({
     }),
 
   // Get reviews for a specific eval run
-  getByEvalRun: publicProcedure
+  getByEvalRun: viewerProcedure
     .input(z.object({ evalRunId: z.string() }))
     .query(async ({ ctx, input }) => {
       const reviews = await ctx.db.humanReview.findMany({
@@ -182,7 +182,7 @@ export const reviewsRouter = createTRPCRouter({
       return reviews;
     }),
 
-  // Get review statistics
+  // Get review statistics - public for dashboard access
   getStats: publicProcedure
     .input(
       z.object({

@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure, viewerProcedure, adminProcedure } from "@/server/api/trpc";
 
 export const promptsRouter = createTRPCRouter({
+  // Public for dashboard access
   list: publicProcedure.query(async ({ ctx }) => {
     const prompts = await ctx.db.promptTemplate.findMany({
       orderBy: [{ name: "asc" }, { version: "desc" }],
@@ -30,7 +31,7 @@ export const promptsRouter = createTRPCRouter({
     return Array.from(latestByName.values());
   }),
 
-  listAllVersions: publicProcedure
+  listAllVersions: viewerProcedure
     .input(z.object({ name: z.string() }))
     .query(async ({ ctx, input }) => {
       const prompts = await ctx.db.promptTemplate.findMany({
@@ -41,7 +42,7 @@ export const promptsRouter = createTRPCRouter({
       return prompts;
     }),
 
-  getById: publicProcedure
+  getById: viewerProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const prompt = await ctx.db.promptTemplate.findUnique({
@@ -55,7 +56,7 @@ export const promptsRouter = createTRPCRouter({
       return prompt;
     }),
 
-  create: publicProcedure
+  create: adminProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -86,7 +87,7 @@ export const promptsRouter = createTRPCRouter({
       return prompt;
     }),
 
-  createNewVersion: publicProcedure
+  createNewVersion: adminProcedure
     .input(
       z.object({
         name: z.string(),
@@ -119,7 +120,7 @@ export const promptsRouter = createTRPCRouter({
       return prompt;
     }),
 
-  fork: publicProcedure
+  fork: adminProcedure
     .input(
       z.object({
         sourceId: z.string(),
@@ -157,7 +158,7 @@ export const promptsRouter = createTRPCRouter({
       return prompt;
     }),
 
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.promptTemplate.delete({
@@ -167,7 +168,7 @@ export const promptsRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  deleteAllVersions: publicProcedure
+  deleteAllVersions: adminProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.promptTemplate.deleteMany({

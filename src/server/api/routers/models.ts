@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, viewerProcedure, adminProcedure } from "@/server/api/trpc";
 import { AVAILABLE_MODELS } from "@/server/services/llm";
 
 export const modelsRouter = createTRPCRouter({
-  list: publicProcedure.query(async ({ ctx }) => {
+  list: viewerProcedure.query(async ({ ctx }) => {
     const models = await ctx.db.modelConfig.findMany({
       orderBy: [{ provider: "asc" }, { displayName: "asc" }],
     });
@@ -11,7 +11,7 @@ export const modelsRouter = createTRPCRouter({
     return models;
   }),
 
-  listActive: publicProcedure.query(async ({ ctx }) => {
+  listActive: viewerProcedure.query(async ({ ctx }) => {
     const models = await ctx.db.modelConfig.findMany({
       where: { isActive: true },
       orderBy: [{ provider: "asc" }, { displayName: "asc" }],
@@ -20,7 +20,7 @@ export const modelsRouter = createTRPCRouter({
     return models;
   }),
 
-  getById: publicProcedure
+  getById: viewerProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const model = await ctx.db.modelConfig.findUnique({
@@ -34,7 +34,7 @@ export const modelsRouter = createTRPCRouter({
       return model;
     }),
 
-  create: publicProcedure
+  create: adminProcedure
     .input(
       z.object({
         provider: z.enum(["openai", "anthropic"]),
@@ -56,7 +56,7 @@ export const modelsRouter = createTRPCRouter({
       return model;
     }),
 
-  update: publicProcedure
+  update: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -76,7 +76,7 @@ export const modelsRouter = createTRPCRouter({
       return model;
     }),
 
-  toggleActive: publicProcedure
+  toggleActive: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const current = await ctx.db.modelConfig.findUnique({
@@ -95,7 +95,7 @@ export const modelsRouter = createTRPCRouter({
       return model;
     }),
 
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.modelConfig.delete({
@@ -106,7 +106,7 @@ export const modelsRouter = createTRPCRouter({
     }),
 
   // Seed default models
-  seedDefaults: publicProcedure.mutation(async ({ ctx }) => {
+  seedDefaults: adminProcedure.mutation(async ({ ctx }) => {
     const allModels = [
       ...AVAILABLE_MODELS.openai.map((m) => ({
         provider: "openai" as const,
@@ -144,7 +144,7 @@ export const modelsRouter = createTRPCRouter({
   }),
 
   // Get available models from LLM service (for reference)
-  getAvailableModels: publicProcedure.query(() => {
+  getAvailableModels: viewerProcedure.query(() => {
     return AVAILABLE_MODELS;
   }),
 });

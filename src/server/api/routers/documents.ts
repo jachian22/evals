@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, viewerProcedure, adminProcedure } from "@/server/api/trpc";
 import { extractTextFromPDF, deletePDF } from "@/server/services/pdf";
 
 export const documentsRouter = createTRPCRouter({
-  list: publicProcedure
+  list: viewerProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(50),
@@ -33,7 +33,7 @@ export const documentsRouter = createTRPCRouter({
       return { documents, nextCursor };
     }),
 
-  getById: publicProcedure
+  getById: viewerProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const document = await ctx.db.document.findUnique({
@@ -47,7 +47,7 @@ export const documentsRouter = createTRPCRouter({
       return document;
     }),
 
-  upload: publicProcedure
+  upload: adminProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -72,7 +72,7 @@ export const documentsRouter = createTRPCRouter({
       return document;
     }),
 
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const document = await ctx.db.document.findUnique({
@@ -94,7 +94,7 @@ export const documentsRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  updateName: publicProcedure
+  updateName: adminProcedure
     .input(z.object({ id: z.string(), name: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const document = await ctx.db.document.update({

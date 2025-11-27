@@ -6,11 +6,13 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 import { db } from "@/server/db";
+import { env } from "@/env";
 
 /**
  * 1. CONTEXT
@@ -25,8 +27,21 @@ import { db } from "@/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const { userId } = await auth();
+  const user = userId ? await currentUser() : null;
+
+  // Check if any of the user's email addresses are in the admin list
+  const userEmails = user?.emailAddresses.map(e => e.emailAddress.toLowerCase()) ?? [];
+  const isAdmin = userEmails.some(email => env.ADMIN_EMAILS.includes(email));
+
+  // Use the primary email for logging/identification purposes
+  const userEmail = user?.emailAddresses[0]?.emailAddress?.toLowerCase() ?? null;
+
   return {
     db,
+    userId,
+    userEmail,
+    isAdmin,
     ...opts,
   };
 };
@@ -97,6 +112,55 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 });
 
 /**
+ * Auth middleware - ensures user is authenticated
+ */
+const authMiddleware = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in to access this resource",
+    });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      userId: ctx.userId,
+      userEmail: ctx.userEmail,
+      isAdmin: ctx.isAdmin,
+    },
+  });
+});
+
+/**
+ * Admin middleware - ensures user is an admin
+ */
+const adminMiddleware = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in to access this resource",
+    });
+  }
+
+  if (!ctx.isAdmin) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You do not have permission to perform this action",
+    });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      userId: ctx.userId,
+      userEmail: ctx.userEmail,
+      isAdmin: ctx.isAdmin,
+    },
+  });
+});
+
+/**
  * Public (unauthenticated) procedure
  *
  * This is the base piece you use to build new queries and mutations on your tRPC API. It does not
@@ -104,3 +168,21 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
+
+/**
+ * Viewer procedure - requires authentication (any logged-in user)
+ *
+ * Use this for read-only operations that any authenticated user can access.
+ */
+export const viewerProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(authMiddleware);
+
+/**
+ * Admin procedure - requires admin role (whitelisted email)
+ *
+ * Use this for mutations and sensitive operations that only admins can perform.
+ */
+export const adminProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(adminMiddleware);

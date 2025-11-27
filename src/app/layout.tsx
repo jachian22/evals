@@ -2,8 +2,10 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { TRPCReactProvider } from "@/trpc/react";
 import { Navigation } from "@/app/_components/navigation";
+import { MainContent } from "@/app/_components/main-content";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,12 +32,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} dark`}
     >
       <body className="min-h-screen bg-bg-primary">
-        <TRPCReactProvider>
-          <div className="flex min-h-screen">
-            <Navigation />
-            <main className="flex-1 ml-64">{children}</main>
-          </div>
-        </TRPCReactProvider>
+        <ClerkProvider>
+          <TRPCReactProvider>
+            <div className="flex min-h-screen">
+              <Navigation />
+              <MainContent>{children}</MainContent>
+            </div>
+          </TRPCReactProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

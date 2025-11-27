@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure, viewerProcedure, adminProcedure } from "@/server/api/trpc";
 
 const groundTruthSchema = z.object({
   entities: z.array(
@@ -12,6 +12,7 @@ const groundTruthSchema = z.object({
 });
 
 export const datasetsRouter = createTRPCRouter({
+  // Public for dashboard access
   list: publicProcedure.query(async ({ ctx }) => {
     const datasets = await ctx.db.dataset.findMany({
       orderBy: { createdAt: "desc" },
@@ -25,7 +26,7 @@ export const datasetsRouter = createTRPCRouter({
     return datasets;
   }),
 
-  getById: publicProcedure
+  getById: viewerProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const dataset = await ctx.db.dataset.findUnique({
@@ -54,7 +55,7 @@ export const datasetsRouter = createTRPCRouter({
       return dataset;
     }),
 
-  create: publicProcedure
+  create: adminProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -72,7 +73,7 @@ export const datasetsRouter = createTRPCRouter({
       return dataset;
     }),
 
-  update: publicProcedure
+  update: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -92,7 +93,7 @@ export const datasetsRouter = createTRPCRouter({
       return dataset;
     }),
 
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.dataset.delete({
@@ -102,7 +103,7 @@ export const datasetsRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  addDocument: publicProcedure
+  addDocument: adminProcedure
     .input(
       z.object({
         datasetId: z.string(),
@@ -125,7 +126,7 @@ export const datasetsRouter = createTRPCRouter({
       return datasetDoc;
     }),
 
-  removeDocument: publicProcedure
+  removeDocument: adminProcedure
     .input(
       z.object({
         datasetId: z.string(),
@@ -145,7 +146,7 @@ export const datasetsRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  updateGroundTruth: publicProcedure
+  updateGroundTruth: adminProcedure
     .input(
       z.object({
         datasetId: z.string(),
@@ -169,7 +170,7 @@ export const datasetsRouter = createTRPCRouter({
       return datasetDoc;
     }),
 
-  importGroundTruth: publicProcedure
+  importGroundTruth: adminProcedure
     .input(
       z.object({
         datasetId: z.string(),

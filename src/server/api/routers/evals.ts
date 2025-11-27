@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure, viewerProcedure, adminProcedure } from "@/server/api/trpc";
 import { callLLM, interpolatePrompt } from "@/server/services/llm";
 import {
   scoreEntities,
@@ -10,6 +10,7 @@ import {
 } from "@/server/services/scoring";
 
 export const evalsRouter = createTRPCRouter({
+  // Public for dashboard access
   list: publicProcedure
     .input(
       z.object({
@@ -43,7 +44,7 @@ export const evalsRouter = createTRPCRouter({
       return { runs, nextCursor };
     }),
 
-  getById: publicProcedure
+  getById: viewerProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const run = await ctx.db.evalRun.findUnique({
@@ -70,7 +71,7 @@ export const evalsRouter = createTRPCRouter({
       return run;
     }),
 
-  create: publicProcedure
+  create: adminProcedure
     .input(
       z.object({
         datasetId: z.string(),
@@ -91,7 +92,7 @@ export const evalsRouter = createTRPCRouter({
       return run;
     }),
 
-  execute: publicProcedure
+  execute: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const run = await ctx.db.evalRun.findUnique({
@@ -210,7 +211,7 @@ export const evalsRouter = createTRPCRouter({
       }
     }),
 
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.evalRun.delete({
@@ -221,7 +222,7 @@ export const evalsRouter = createTRPCRouter({
     }),
 
   // Compare multiple runs
-  compare: publicProcedure
+  compare: viewerProcedure
     .input(z.object({ runIds: z.array(z.string()).min(2) }))
     .query(async ({ ctx, input }) => {
       const runs = await ctx.db.evalRun.findMany({
