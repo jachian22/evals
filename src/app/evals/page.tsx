@@ -17,9 +17,9 @@ type EvalRun = {
   id: string;
   status: string;
   aggregateScore: unknown;
-  dataset: { id: string; name: string };
-  prompt: { id: string; name: string; version: number; node: string | null };
-  modelConfig: { id: string; displayName: string; provider: string };
+  dataset: { id: string; name: string } | null;
+  prompt: { id: string; name: string; version: number; node: string | null } | null;
+  modelConfig: { id: string; displayName: string; provider: string } | null;
   _count: { results: number };
 };
 
@@ -53,13 +53,13 @@ function EvalRunRow({
 
   return (
     <tr>
-      <td className="font-medium">{run.dataset.name}</td>
+      <td className="font-medium">{run.dataset?.name ?? "Unknown Dataset"}</td>
       <td>
-        {run.prompt.name} v{run.prompt.version}
+        {run.prompt?.name ?? "Unknown"} v{run.prompt?.version ?? "?"}
       </td>
       <td>
-        <span className="badge badge-neutral">{run.modelConfig.provider}</span>{" "}
-        {run.modelConfig.displayName}
+        <span className="badge badge-neutral">{run.modelConfig?.provider ?? "?"}</span>{" "}
+        {run.modelConfig?.displayName ?? "Unknown Model"}
       </td>
       <td>
         <span

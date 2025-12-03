@@ -88,11 +88,11 @@ export default function EvalDetailPage({
             <span className="text-text-secondary">{run.dataset.name}</span>
             <span className="text-text-tertiary">•</span>
             <span className="text-text-secondary">
-              {run.prompt.name} v{run.prompt.version}
+              {run.prompt?.name ?? "Unknown"} v{run.prompt?.version ?? "?"}
             </span>
             <span className="text-text-tertiary">•</span>
             <span className="text-text-secondary">
-              {run.modelConfig.displayName}
+              {run.modelConfig?.displayName ?? "Unknown Model"}
             </span>
           </div>
         </div>

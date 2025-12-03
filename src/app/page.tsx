@@ -124,7 +124,7 @@ export default async function Dashboard() {
                     return (
                       <tr key={run.id}>
                         <td>
-                          {run.prompt.node ? (
+                          {run.prompt?.node ? (
                             <span className="badge badge-neutral text-xs">
                               {run.prompt.node}
                             </span>
@@ -132,11 +132,11 @@ export default async function Dashboard() {
                             <span className="text-text-tertiary">—</span>
                           )}
                         </td>
-                        <td className="font-medium">{run.dataset.name}</td>
+                        <td className="font-medium">{run.dataset?.name ?? "Unknown"}</td>
                         <td>
-                          {run.prompt.name} v{run.prompt.version}
+                          {run.prompt?.name ?? "Unknown"} v{run.prompt?.version ?? "?"}
                         </td>
-                        <td>{run.modelConfig.displayName}</td>
+                        <td>{run.modelConfig?.displayName ?? "Unknown Model"}</td>
                         <td>
                           <span
                             className={`badge ${
