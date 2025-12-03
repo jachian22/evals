@@ -27,7 +27,7 @@ export const evalsRouter = createTRPCRouter({
         orderBy: { createdAt: "desc" },
         include: {
           dataset: { select: { id: true, name: true } },
-          prompt: { select: { id: true, name: true, version: true } },
+          prompt: { select: { id: true, name: true, version: true, node: true } },
           modelConfig: {
             select: { id: true, displayName: true, provider: true },
           },
@@ -229,7 +229,7 @@ export const evalsRouter = createTRPCRouter({
         where: { id: { in: input.runIds } },
         include: {
           dataset: { select: { id: true, name: true } },
-          prompt: { select: { id: true, name: true, version: true } },
+          prompt: { select: { id: true, name: true, version: true, node: true } },
           modelConfig: {
             select: { id: true, displayName: true, provider: true },
           },

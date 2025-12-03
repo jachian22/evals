@@ -152,6 +152,7 @@ exports.Prisma.PromptTemplateScalarFieldEnum = {
   systemPrompt: 'systemPrompt',
   userPrompt: 'userPrompt',
   outputSchema: 'outputSchema',
+  node: 'node',
   createdAt: 'createdAt'
 };
 

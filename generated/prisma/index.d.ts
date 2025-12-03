@@ -4988,6 +4988,7 @@ export namespace Prisma {
     version: number | null
     systemPrompt: string | null
     userPrompt: string | null
+    node: string | null
     createdAt: Date | null
   }
 
@@ -4997,6 +4998,7 @@ export namespace Prisma {
     version: number | null
     systemPrompt: string | null
     userPrompt: string | null
+    node: string | null
     createdAt: Date | null
   }
 
@@ -5007,6 +5009,7 @@ export namespace Prisma {
     systemPrompt: number
     userPrompt: number
     outputSchema: number
+    node: number
     createdAt: number
     _all: number
   }
@@ -5026,6 +5029,7 @@ export namespace Prisma {
     version?: true
     systemPrompt?: true
     userPrompt?: true
+    node?: true
     createdAt?: true
   }
 
@@ -5035,6 +5039,7 @@ export namespace Prisma {
     version?: true
     systemPrompt?: true
     userPrompt?: true
+    node?: true
     createdAt?: true
   }
 
@@ -5045,6 +5050,7 @@ export namespace Prisma {
     systemPrompt?: true
     userPrompt?: true
     outputSchema?: true
+    node?: true
     createdAt?: true
     _all?: true
   }
@@ -5142,6 +5148,7 @@ export namespace Prisma {
     systemPrompt: string
     userPrompt: string
     outputSchema: JsonValue | null
+    node: string | null
     createdAt: Date
     _count: PromptTemplateCountAggregateOutputType | null
     _avg: PromptTemplateAvgAggregateOutputType | null
@@ -5171,6 +5178,7 @@ export namespace Prisma {
     systemPrompt?: boolean
     userPrompt?: boolean
     outputSchema?: boolean
+    node?: boolean
     createdAt?: boolean
     evalRuns?: boolean | PromptTemplate$evalRunsArgs<ExtArgs>
     _count?: boolean | PromptTemplateCountOutputTypeDefaultArgs<ExtArgs>
@@ -5183,6 +5191,7 @@ export namespace Prisma {
     systemPrompt?: boolean
     userPrompt?: boolean
     outputSchema?: boolean
+    node?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["promptTemplate"]>
 
@@ -5193,6 +5202,7 @@ export namespace Prisma {
     systemPrompt?: boolean
     userPrompt?: boolean
     outputSchema?: boolean
+    node?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["promptTemplate"]>
 
@@ -5203,10 +5213,11 @@ export namespace Prisma {
     systemPrompt?: boolean
     userPrompt?: boolean
     outputSchema?: boolean
+    node?: boolean
     createdAt?: boolean
   }
 
-  export type PromptTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "version" | "systemPrompt" | "userPrompt" | "outputSchema" | "createdAt", ExtArgs["result"]["promptTemplate"]>
+  export type PromptTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "version" | "systemPrompt" | "userPrompt" | "outputSchema" | "node" | "createdAt", ExtArgs["result"]["promptTemplate"]>
   export type PromptTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     evalRuns?: boolean | PromptTemplate$evalRunsArgs<ExtArgs>
     _count?: boolean | PromptTemplateCountOutputTypeDefaultArgs<ExtArgs>
@@ -5226,6 +5237,7 @@ export namespace Prisma {
       systemPrompt: string
       userPrompt: string
       outputSchema: Prisma.JsonValue | null
+      node: string | null
       createdAt: Date
     }, ExtArgs["result"]["promptTemplate"]>
     composites: {}
@@ -5657,6 +5669,7 @@ export namespace Prisma {
     readonly systemPrompt: FieldRef<"PromptTemplate", 'String'>
     readonly userPrompt: FieldRef<"PromptTemplate", 'String'>
     readonly outputSchema: FieldRef<"PromptTemplate", 'Json'>
+    readonly node: FieldRef<"PromptTemplate", 'String'>
     readonly createdAt: FieldRef<"PromptTemplate", 'DateTime'>
   }
     
@@ -10628,6 +10641,7 @@ export namespace Prisma {
     systemPrompt: 'systemPrompt',
     userPrompt: 'userPrompt',
     outputSchema: 'outputSchema',
+    node: 'node',
     createdAt: 'createdAt'
   };
 
@@ -11000,6 +11014,7 @@ export namespace Prisma {
     systemPrompt?: StringFilter<"PromptTemplate"> | string
     userPrompt?: StringFilter<"PromptTemplate"> | string
     outputSchema?: JsonNullableFilter<"PromptTemplate">
+    node?: StringNullableFilter<"PromptTemplate"> | string | null
     createdAt?: DateTimeFilter<"PromptTemplate"> | Date | string
     evalRuns?: EvalRunListRelationFilter
   }
@@ -11011,6 +11026,7 @@ export namespace Prisma {
     systemPrompt?: SortOrder
     userPrompt?: SortOrder
     outputSchema?: SortOrderInput | SortOrder
+    node?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     evalRuns?: EvalRunOrderByRelationAggregateInput
   }
@@ -11025,6 +11041,7 @@ export namespace Prisma {
     systemPrompt?: StringFilter<"PromptTemplate"> | string
     userPrompt?: StringFilter<"PromptTemplate"> | string
     outputSchema?: JsonNullableFilter<"PromptTemplate">
+    node?: StringNullableFilter<"PromptTemplate"> | string | null
     createdAt?: DateTimeFilter<"PromptTemplate"> | Date | string
     evalRuns?: EvalRunListRelationFilter
   }, "id">
@@ -11036,6 +11053,7 @@ export namespace Prisma {
     systemPrompt?: SortOrder
     userPrompt?: SortOrder
     outputSchema?: SortOrderInput | SortOrder
+    node?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: PromptTemplateCountOrderByAggregateInput
     _avg?: PromptTemplateAvgOrderByAggregateInput
@@ -11054,6 +11072,7 @@ export namespace Prisma {
     systemPrompt?: StringWithAggregatesFilter<"PromptTemplate"> | string
     userPrompt?: StringWithAggregatesFilter<"PromptTemplate"> | string
     outputSchema?: JsonNullableWithAggregatesFilter<"PromptTemplate">
+    node?: StringNullableWithAggregatesFilter<"PromptTemplate"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"PromptTemplate"> | Date | string
   }
 
@@ -11531,6 +11550,7 @@ export namespace Prisma {
     systemPrompt: string
     userPrompt: string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: string | null
     createdAt?: Date | string
     evalRuns?: EvalRunCreateNestedManyWithoutPromptInput
   }
@@ -11542,6 +11562,7 @@ export namespace Prisma {
     systemPrompt: string
     userPrompt: string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: string | null
     createdAt?: Date | string
     evalRuns?: EvalRunUncheckedCreateNestedManyWithoutPromptInput
   }
@@ -11553,6 +11574,7 @@ export namespace Prisma {
     systemPrompt?: StringFieldUpdateOperationsInput | string
     userPrompt?: StringFieldUpdateOperationsInput | string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     evalRuns?: EvalRunUpdateManyWithoutPromptNestedInput
   }
@@ -11564,6 +11586,7 @@ export namespace Prisma {
     systemPrompt?: StringFieldUpdateOperationsInput | string
     userPrompt?: StringFieldUpdateOperationsInput | string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     evalRuns?: EvalRunUncheckedUpdateManyWithoutPromptNestedInput
   }
@@ -11575,6 +11598,7 @@ export namespace Prisma {
     systemPrompt: string
     userPrompt: string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: string | null
     createdAt?: Date | string
   }
 
@@ -11585,6 +11609,7 @@ export namespace Prisma {
     systemPrompt?: StringFieldUpdateOperationsInput | string
     userPrompt?: StringFieldUpdateOperationsInput | string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -11595,6 +11620,7 @@ export namespace Prisma {
     systemPrompt?: StringFieldUpdateOperationsInput | string
     userPrompt?: StringFieldUpdateOperationsInput | string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -12193,6 +12219,7 @@ export namespace Prisma {
     systemPrompt?: SortOrder
     userPrompt?: SortOrder
     outputSchema?: SortOrder
+    node?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -12206,6 +12233,7 @@ export namespace Prisma {
     version?: SortOrder
     systemPrompt?: SortOrder
     userPrompt?: SortOrder
+    node?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -12215,6 +12243,7 @@ export namespace Prisma {
     version?: SortOrder
     systemPrompt?: SortOrder
     userPrompt?: SortOrder
+    node?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -13582,6 +13611,7 @@ export namespace Prisma {
     systemPrompt: string
     userPrompt: string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: string | null
     createdAt?: Date | string
   }
 
@@ -13592,6 +13622,7 @@ export namespace Prisma {
     systemPrompt: string
     userPrompt: string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: string | null
     createdAt?: Date | string
   }
 
@@ -13698,6 +13729,7 @@ export namespace Prisma {
     systemPrompt?: StringFieldUpdateOperationsInput | string
     userPrompt?: StringFieldUpdateOperationsInput | string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -13708,6 +13740,7 @@ export namespace Prisma {
     systemPrompt?: StringFieldUpdateOperationsInput | string
     userPrompt?: StringFieldUpdateOperationsInput | string
     outputSchema?: NullableJsonNullValueInput | InputJsonValue
+    node?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

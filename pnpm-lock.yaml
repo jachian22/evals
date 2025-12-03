@@ -15,7 +15,7 @@ importers:
         specifier: ^6.35.5
         version: 6.35.5(next@15.5.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@prisma/adapter-pg':
-        specifier: ^6.6.0
+        specifier: ^6.19.0
         version: 6.19.0
       '@prisma/client':
         specifier: ^6.6.0

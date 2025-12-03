@@ -53,6 +53,7 @@ model PromptTemplate {
   systemPrompt String   @db.Text
   userPrompt   String   @db.Text
   outputSchema Json?
+  node         String?
   createdAt    DateTime @default(now())
 
   evalRuns EvalRun[]

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { api } from "@/trpc/react";
 
@@ -9,6 +9,166 @@ interface AggregateScore {
   microPrecision?: number;
   microRecall?: number;
   avgF1?: number;
+}
+
+type EvalRun = {
+  id: string;
+  status: string;
+  aggregateScore: unknown;
+  dataset: { id: string; name: string };
+  prompt: { id: string; name: string; version: number; node: string | null };
+  modelConfig: { id: string; displayName: string; provider: string };
+  _count: { results: number };
+};
+
+type GroupedRuns = Record<string, EvalRun[]>;
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      className={`w-5 h-5 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
+
+function EvalRunRow({
+  run,
+  onRerun,
+  onDelete,
+  isExecuting,
+}: {
+  run: EvalRun;
+  onRerun: (id: string) => void;
+  onDelete: (id: string) => void;
+  isExecuting: boolean;
+}) {
+  const score = run.aggregateScore as AggregateScore | null;
+
+  return (
+    <tr>
+      <td className="font-medium">{run.dataset.name}</td>
+      <td>
+        {run.prompt.name} v{run.prompt.version}
+      </td>
+      <td>
+        <span className="badge badge-neutral">{run.modelConfig.provider}</span>{" "}
+        {run.modelConfig.displayName}
+      </td>
+      <td>
+        <span
+          className={`badge ${
+            run.status === "completed"
+              ? "badge-success"
+              : run.status === "failed"
+                ? "badge-error"
+                : run.status === "running"
+                  ? "badge-warning"
+                  : "badge-neutral"
+          }`}
+        >
+          {run.status}
+        </span>
+      </td>
+      <td className="font-mono">
+        {score?.microF1 !== undefined ? `${(score.microF1 * 100).toFixed(1)}%` : "—"}
+      </td>
+      <td className="font-mono text-text-secondary">
+        {score?.microPrecision !== undefined
+          ? `${(score.microPrecision * 100).toFixed(1)}%`
+          : "—"}
+      </td>
+      <td className="font-mono text-text-secondary">
+        {score?.microRecall !== undefined ? `${(score.microRecall * 100).toFixed(1)}%` : "—"}
+      </td>
+      <td>{run._count.results}</td>
+      <td>
+        <div className="flex gap-2">
+          <Link href={`/evals/${run.id}`} className="btn btn-ghost text-sm py-1 px-2">
+            View
+          </Link>
+          {run.status === "failed" && (
+            <button
+              onClick={() => onRerun(run.id)}
+              className="btn btn-secondary text-sm py-1 px-2"
+              disabled={isExecuting}
+            >
+              Retry
+            </button>
+          )}
+          <button onClick={() => onDelete(run.id)} className="btn btn-danger text-sm py-1 px-2">
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function NodeGroup({
+  nodeName,
+  runs,
+  defaultExpanded,
+  onRerun,
+  onDelete,
+  isExecuting,
+}: {
+  nodeName: string;
+  runs: EvalRun[];
+  defaultExpanded: boolean;
+  onRerun: (id: string) => void;
+  onDelete: (id: string) => void;
+  isExecuting: boolean;
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-3 px-4 py-3 bg-surface-secondary hover:bg-surface-tertiary rounded-lg transition-colors"
+      >
+        <ChevronIcon expanded={expanded} />
+        <span className="font-semibold text-text-primary">{nodeName}</span>
+        <span className="text-text-tertiary text-sm">({runs.length} run{runs.length !== 1 ? "s" : ""})</span>
+      </button>
+
+      {expanded && (
+        <div className="mt-2 table-container">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Dataset</th>
+                <th>Prompt</th>
+                <th>Model</th>
+                <th>Status</th>
+                <th>F1</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>Results</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {runs.map((run) => (
+                <EvalRunRow
+                  key={run.id}
+                  run={run}
+                  onRerun={onRerun}
+                  onDelete={onDelete}
+                  isExecuting={isExecuting}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function EvalsPage() {
@@ -43,6 +203,30 @@ export default function EvalsPage() {
     },
   });
 
+  // Group runs by node
+  const groupedRuns = useMemo(() => {
+    if (!evalRuns?.runs) return {} as GroupedRuns;
+
+    const groups: GroupedRuns = {};
+    for (const run of evalRuns.runs) {
+      const node = run.prompt.node ?? "Ungrouped";
+      groups[node] ??= [];
+      groups[node].push(run);
+    }
+
+    return groups;
+  }, [evalRuns?.runs]);
+
+  // Sort node names alphabetically, but keep "Ungrouped" at the end
+  const sortedNodeNames = useMemo(() => {
+    const names = Object.keys(groupedRuns);
+    return names.sort((a, b) => {
+      if (a === "Ungrouped") return 1;
+      if (b === "Ungrouped") return -1;
+      return a.localeCompare(b);
+    });
+  }, [groupedRuns]);
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDataset || !selectedPrompt || !selectedModel) return;
@@ -55,6 +239,10 @@ export default function EvalsPage() {
 
   const handleRerun = (runId: string) => {
     executeMutation.mutate({ id: runId });
+  };
+
+  const handleDelete = (runId: string) => {
+    deleteMutation.mutate({ id: runId });
   };
 
   return (
@@ -189,7 +377,7 @@ export default function EvalsPage() {
         </form>
       )}
 
-      {/* Eval Runs List */}
+      {/* Eval Runs List - Grouped by Node */}
       {isLoading ? (
         <div className="text-center py-8 text-text-tertiary">Loading...</div>
       ) : evalRuns?.runs.length === 0 ? (
@@ -203,100 +391,20 @@ export default function EvalsPage() {
           </button>
         </div>
       ) : (
-        <div className="table-container">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Dataset</th>
-                <th>Prompt</th>
-                <th>Model</th>
-                <th>Status</th>
-                <th>F1</th>
-                <th>Precision</th>
-                <th>Recall</th>
-                <th>Results</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {evalRuns?.runs.map((run) => {
-                const score = run.aggregateScore as AggregateScore | null;
-                return (
-                  <tr key={run.id}>
-                    <td className="font-medium">{run.dataset.name}</td>
-                    <td>
-                      {run.prompt.name} v{run.prompt.version}
-                    </td>
-                    <td>
-                      <span className="badge badge-neutral">
-                        {run.modelConfig.provider}
-                      </span>{" "}
-                      {run.modelConfig.displayName}
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          run.status === "completed"
-                            ? "badge-success"
-                            : run.status === "failed"
-                              ? "badge-error"
-                              : run.status === "running"
-                                ? "badge-warning"
-                                : "badge-neutral"
-                        }`}
-                      >
-                        {run.status}
-                      </span>
-                    </td>
-                    <td className="font-mono">
-                      {score?.microF1 !== undefined
-                        ? `${(score.microF1 * 100).toFixed(1)}%`
-                        : "—"}
-                    </td>
-                    <td className="font-mono text-text-secondary">
-                      {score?.microPrecision !== undefined
-                        ? `${(score.microPrecision * 100).toFixed(1)}%`
-                        : "—"}
-                    </td>
-                    <td className="font-mono text-text-secondary">
-                      {score?.microRecall !== undefined
-                        ? `${(score.microRecall * 100).toFixed(1)}%`
-                        : "—"}
-                    </td>
-                    <td>{run._count.results}</td>
-                    <td>
-                      <div className="flex gap-2">
-                        <Link
-                          href={`/evals/${run.id}`}
-                          className="btn btn-ghost text-sm py-1 px-2"
-                        >
-                          View
-                        </Link>
-                        {run.status === "failed" && (
-                          <button
-                            onClick={() => handleRerun(run.id)}
-                            className="btn btn-secondary text-sm py-1 px-2"
-                            disabled={executeMutation.isPending}
-                          >
-                            Retry
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteMutation.mutate({ id: run.id })}
-                          className="btn btn-danger text-sm py-1 px-2"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="space-y-2">
+          {sortedNodeNames.map((nodeName) => (
+            <NodeGroup
+              key={nodeName}
+              nodeName={nodeName}
+              runs={groupedRuns[nodeName]!}
+              defaultExpanded={false}
+              onRerun={handleRerun}
+              onDelete={handleDelete}
+              isExecuting={executeMutation.isPending}
+            />
+          ))}
         </div>
       )}
     </div>
   );
 }
-

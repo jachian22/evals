@@ -63,6 +63,7 @@ export const promptsRouter = createTRPCRouter({
         systemPrompt: z.string(),
         userPrompt: z.string(),
         outputSchema: z.any().optional(),
+        node: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -81,6 +82,7 @@ export const promptsRouter = createTRPCRouter({
           systemPrompt: input.systemPrompt,
           userPrompt: input.userPrompt,
           outputSchema: input.outputSchema as object | undefined,
+          node: input.node,
         },
       });
 
@@ -94,6 +96,7 @@ export const promptsRouter = createTRPCRouter({
         systemPrompt: z.string(),
         userPrompt: z.string(),
         outputSchema: z.any().optional(),
+        node: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -114,6 +117,7 @@ export const promptsRouter = createTRPCRouter({
           systemPrompt: input.systemPrompt,
           userPrompt: input.userPrompt,
           outputSchema: input.outputSchema as object | undefined,
+          node: input.node,
         },
       });
 
@@ -125,6 +129,7 @@ export const promptsRouter = createTRPCRouter({
       z.object({
         sourceId: z.string(),
         newName: z.string().min(1),
+        node: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -152,6 +157,7 @@ export const promptsRouter = createTRPCRouter({
           systemPrompt: source.systemPrompt,
           userPrompt: source.userPrompt,
           outputSchema: source.outputSchema as object | undefined,
+          node: input.node ?? source.node,
         },
       });
 
