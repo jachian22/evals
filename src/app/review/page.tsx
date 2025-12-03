@@ -8,16 +8,17 @@ import { ReviewQueue } from "./_components/review-queue";
 import { EntityPanel } from "./_components/entity-panel";
 import { ReviewFooter } from "./_components/review-footer";
 import type { EntityState, Entity } from "./_components/entity-row";
-import type { Allotment as AllotmentType } from "allotment";
 
 // Dynamic import for allotment to avoid SSR issues
-const AllotmentModule = dynamic(
-  () => import("allotment").then((mod) => {
-    const { Allotment } = mod;
-    return { default: Object.assign(Allotment, { Pane: mod.Allotment.Pane }) };
-  }),
+const Allotment = dynamic(
+  () => import("allotment").then((mod) => mod.Allotment),
   { ssr: false }
-) as unknown as typeof AllotmentType;
+);
+
+const AllotmentPane = dynamic(
+  () => import("allotment").then((mod) => mod.Allotment.Pane),
+  { ssr: false }
+);
 
 // Dynamic import for PDF viewer
 const PDFViewer = dynamic(
@@ -302,9 +303,9 @@ function ReviewPageContent() {
             <div className="text-error">Result not found</div>
           </div>
         ) : (
-          <AllotmentModule defaultSizes={[40, 60]}>
+          <Allotment defaultSizes={[40, 60]}>
             {/* Left Panel: Entity List + Footer */}
-            <AllotmentModule.Pane minSize={300}>
+            <AllotmentPane minSize={300}>
               <div className="h-full flex flex-col bg-bg-primary">
                 <EntityPanel
                   documentName={resultData.document?.name ?? "Unknown Document"}
@@ -335,10 +336,10 @@ function ReviewPageContent() {
                   stats={entityStats}
                 />
               </div>
-            </AllotmentModule.Pane>
+            </AllotmentPane>
 
             {/* Right Panel: PDF Viewer */}
-            <AllotmentModule.Pane minSize={400}>
+            <AllotmentPane minSize={400}>
               {resultData.document?.id ? (
                 <PDFViewer
                   documentId={resultData.document.id}
@@ -350,8 +351,8 @@ function ReviewPageContent() {
                   <div className="text-text-tertiary text-sm">Document not available</div>
                 </div>
               )}
-            </AllotmentModule.Pane>
-          </AllotmentModule>
+            </AllotmentPane>
+          </Allotment>
         )}
       </div>
     </div>

@@ -259,18 +259,18 @@ export const evalsRouter = createTRPCRouter({
 
       for (const run of runs) {
         for (const result of run.results) {
-          const docId = result.document.id;
+          const docId = result.document?.id ?? "unknown";
           if (!documentResults.has(docId)) {
             documentResults.set(docId, {
-              documentName: result.document.name,
+              documentName: result.document?.name ?? "Unknown Document",
               results: [],
             });
           }
 
           documentResults.get(docId)!.results.push({
             runId: run.id,
-            modelName: run.modelConfig.displayName,
-            promptName: `${run.prompt.name} v${run.prompt.version}`,
+            modelName: run.modelConfig?.displayName ?? "Unknown Model",
+            promptName: `${run.prompt?.name ?? "Unknown"} v${run.prompt?.version ?? "?"}`,
             autoScore: result.autoScore as ScoringResult | null,
           });
         }
@@ -279,8 +279,8 @@ export const evalsRouter = createTRPCRouter({
       return {
         runs: runs.map((r) => ({
           id: r.id,
-          model: r.modelConfig.displayName,
-          prompt: `${r.prompt.name} v${r.prompt.version}`,
+          model: r.modelConfig?.displayName ?? "Unknown Model",
+          prompt: `${r.prompt?.name ?? "Unknown"} v${r.prompt?.version ?? "?"}`,
           aggregateScore: r.aggregateScore,
         })),
         documentComparison: Array.from(documentResults.entries()).map(

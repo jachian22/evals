@@ -1,13 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+import { useState, useRef, useEffect } from "react";
 import type { EntityState } from "./entity-row";
-
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface BoundingBox {
   page: number;
@@ -25,122 +19,54 @@ interface PDFViewerProps {
   boundingBoxes?: Array<{ entityIndex: number; box: BoundingBox }>;
 }
 
-type ZoomMode = "fit-width" | "fit-page" | "custom";
-
 export function PDFViewer({
   documentId,
-  highlightedEntity,
-  onTextSelect,
-  onBoundingBoxClick,
-  boundingBoxes = [],
+  // These props are stubbed for future bounding box support
+  highlightedEntity: _highlightedEntity,
+  onTextSelect: _onTextSelect,
+  onBoundingBoxClick: _onBoundingBoxClick,
+  boundingBoxes: _boundingBoxes = [],
 }: PDFViewerProps) {
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [scale, setScale] = useState(1);
-  const [zoomMode, setZoomMode] = useState<ZoomMode>("fit-width");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
+  const [zoom, setZoom] = useState(100);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const pdfUrl = `/api/pdf/${documentId}`;
 
-  // Measure container width for fit modes
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.clientWidth - 48); // Account for padding
-      }
-    };
-
-    updateWidth();
-    const observer = new ResizeObserver(updateWidth);
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
+  // Handle iframe load
+  const handleLoad = () => {
     setIsLoading(false);
     setError(null);
-  }, []);
+  };
 
-  const onDocumentLoadError = useCallback((err: Error) => {
-    console.error("PDF load error:", err);
-    setError("Failed to load PDF. The file may be corrupted or unavailable.");
+  const handleError = () => {
     setIsLoading(false);
-  }, []);
-
-  const handleZoomIn = () => {
-    setZoomMode("custom");
-    setScale((s) => Math.min(s + 0.25, 3));
+    setError("Failed to load PDF. The file may be unavailable.");
   };
 
-  const handleZoomOut = () => {
-    setZoomMode("custom");
-    setScale((s) => Math.max(s - 0.25, 0.5));
-  };
+  // Zoom controls
+  const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 200));
+  const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 50));
+  const handleZoomReset = () => setZoom(100);
 
-  const handleFitWidth = () => {
-    setZoomMode("fit-width");
-    setScale(1);
-  };
-
-  const handleFitPage = () => {
-    setZoomMode("fit-page");
-    setScale(1);
-  };
-
-  const goToPrevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
-  const goToNextPage = () => setCurrentPage((p) => Math.min(p + 1, numPages ?? p));
-
-  // Calculate actual scale based on zoom mode
-  const getPageWidth = () => {
-    if (zoomMode === "fit-width" && containerWidth > 0) {
-      return containerWidth;
-    }
-    return undefined;
-  };
-
-  const getPageScale = () => {
-    if (zoomMode === "custom") {
-      return scale;
-    }
-    return undefined;
-  };
-
-  // Stubbed: Handle text selection for future select-to-create feature
-  const handleTextSelection = useCallback(() => {
-    if (!onTextSelect) return;
-
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) return;
-
-    const text = selection.toString().trim();
-    if (!text) return;
-
-    // Stubbed: In the future, calculate actual bounding box from selection
-    // For now, just provide placeholder coordinates
-    const stubBounds: BoundingBox = {
-      page: currentPage,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 20,
-    };
-
-    onTextSelect(text, stubBounds);
-  }, [onTextSelect, currentPage]);
-
-  // Scroll to page if highlighted entity has bounding box
+  // Check if PDF exists
   useEffect(() => {
-    if (highlightedEntity?.boundingBox) {
-      setCurrentPage(highlightedEntity.boundingBox.page);
-    }
-  }, [highlightedEntity]);
+    setIsLoading(true);
+    setError(null);
+    
+    fetch(pdfUrl, { method: "HEAD" })
+      .then((res) => {
+        if (!res.ok) {
+          setError("PDF not found");
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        setError("Failed to check PDF availability");
+        setIsLoading(false);
+      });
+  }, [pdfUrl]);
 
   return (
     <div className="flex flex-col h-full bg-bg-tertiary">
@@ -150,7 +76,8 @@ export function PDFViewer({
           {/* Zoom controls */}
           <button
             onClick={handleZoomOut}
-            className="p-1.5 rounded hover:bg-bg-elevated text-text-secondary hover:text-text-primary transition-colors"
+            disabled={zoom <= 50}
+            className="p-1.5 rounded hover:bg-bg-elevated text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Zoom out"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -158,15 +85,12 @@ export function PDFViewer({
             </svg>
           </button>
           <span className="text-xs text-text-secondary min-w-[4rem] text-center">
-            {zoomMode === "custom"
-              ? `${Math.round(scale * 100)}%`
-              : zoomMode === "fit-width"
-              ? "Fit Width"
-              : "Fit Page"}
+            {zoom}%
           </span>
           <button
             onClick={handleZoomIn}
-            className="p-1.5 rounded hover:bg-bg-elevated text-text-secondary hover:text-text-primary transition-colors"
+            disabled={zoom >= 200}
+            className="p-1.5 rounded hover:bg-bg-elevated text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Zoom in"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -177,59 +101,33 @@ export function PDFViewer({
           <div className="w-px h-4 bg-border mx-2" />
 
           <button
-            onClick={handleFitWidth}
+            onClick={handleZoomReset}
             className={`px-2 py-1 rounded text-xs transition-colors ${
-              zoomMode === "fit-width"
+              zoom === 100
                 ? "bg-accent/20 text-accent"
                 : "hover:bg-bg-elevated text-text-secondary hover:text-text-primary"
             }`}
           >
-            Width
-          </button>
-          <button
-            onClick={handleFitPage}
-            className={`px-2 py-1 rounded text-xs transition-colors ${
-              zoomMode === "fit-page"
-                ? "bg-accent/20 text-accent"
-                : "hover:bg-bg-elevated text-text-secondary hover:text-text-primary"
-            }`}
-          >
-            Page
+            Reset
           </button>
         </div>
 
-        {/* Page navigation */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={goToPrevPage}
-            disabled={currentPage <= 1}
-            className="p-1.5 rounded hover:bg-bg-elevated text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <span className="text-xs text-text-secondary">
-            {currentPage} / {numPages ?? "?"}
-          </span>
-          <button
-            onClick={goToNextPage}
-            disabled={currentPage >= (numPages ?? 1)}
-            className="p-1.5 rounded hover:bg-bg-elevated text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+        {/* Open in new tab */}
+        <a
+          href={pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 rounded hover:bg-bg-elevated text-text-secondary hover:text-text-primary transition-colors"
+          title="Open in new tab"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
       </div>
 
       {/* PDF Content */}
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-auto p-6"
-        onMouseUp={handleTextSelection}
-      >
+      <div className="flex-1 overflow-auto p-4">
         {error ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -242,65 +140,31 @@ export function PDFViewer({
             </div>
           </div>
         ) : (
-          <div className="flex justify-center">
-            <Document
-              file={pdfUrl}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-              loading={
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-text-tertiary text-sm">Loading PDF...</div>
-                </div>
-              }
-              className="relative"
-            >
-              {isLoading ? null : (
-                <div className="relative shadow-2xl rounded-lg overflow-hidden">
-                  <Page
-                    pageNumber={currentPage}
-                    width={getPageWidth()}
-                    scale={getPageScale()}
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}
-                    className="bg-white"
-                  />
-
-                  {/* Stubbed: Bounding box overlay layer */}
-                  {boundingBoxes
-                    .filter((bb) => bb.box.page === currentPage)
-                    .map((bb, i) => (
-                      <div
-                        key={i}
-                        onClick={() => onBoundingBoxClick?.(bb.entityIndex)}
-                        className="absolute border-2 border-accent bg-accent/10 cursor-pointer hover:bg-accent/20 transition-colors"
-                        style={{
-                          left: bb.box.x,
-                          top: bb.box.y,
-                          width: bb.box.width,
-                          height: bb.box.height,
-                        }}
-                      />
-                    ))}
-
-                  {/* Highlighted entity box (when available) */}
-                  {highlightedEntity?.boundingBox?.page === currentPage && (
-                      <div
-                        className="absolute border-2 border-accent bg-accent/20 pointer-events-none animate-pulse"
-                        style={{
-                          left: highlightedEntity.boundingBox.x,
-                          top: highlightedEntity.boundingBox.y,
-                          width: highlightedEntity.boundingBox.width,
-                          height: highlightedEntity.boundingBox.height,
-                        }}
-                      />
-                    )}
-                </div>
-              )}
-            </Document>
+          <div 
+            className="flex justify-center"
+            style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
+          >
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-bg-tertiary">
+                <div className="text-text-tertiary text-sm">Loading PDF...</div>
+              </div>
+            )}
+            <iframe
+              ref={iframeRef}
+              src={pdfUrl}
+              className="w-full bg-white rounded-lg shadow-2xl"
+              style={{ 
+                height: "calc(100vh - 200px)",
+                minHeight: "600px",
+                maxWidth: "800px",
+              }}
+              onLoad={handleLoad}
+              onError={handleError}
+              title="PDF Document"
+            />
           </div>
         )}
       </div>
     </div>
   );
 }
-
