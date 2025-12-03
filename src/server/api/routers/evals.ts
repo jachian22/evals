@@ -135,7 +135,7 @@ export const evalsRouter = createTRPCRouter({
 
           // Call the LLM
           const response = await callLLM({
-            provider: run.modelConfig.provider as "openai" | "anthropic",
+            provider: run.modelConfig.provider as "openai" | "anthropic" | "google",
             modelId: run.modelConfig.modelId,
             systemPrompt: run.prompt.systemPrompt,
             userPrompt,

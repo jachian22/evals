@@ -1,8 +1,9 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/env";
 
-export type LLMProvider = "openai" | "anthropic";
+export type LLMProvider = "openai" | "anthropic" | "google";
 
 export interface LLMRequest {
   provider: LLMProvider;
@@ -24,6 +25,7 @@ export interface LLMResponse {
 
 let openaiClient: OpenAI | null = null;
 let anthropicClient: Anthropic | null = null;
+let googleClient: GoogleGenerativeAI | null = null;
 
 function getOpenAIClient(): OpenAI {
   openaiClient ??= new OpenAI({
@@ -37,6 +39,11 @@ function getAnthropicClient(): Anthropic {
     apiKey: env.ANTHROPIC_API_KEY,
   });
   return anthropicClient;
+}
+
+function getGoogleClient(): GoogleGenerativeAI {
+  googleClient ??= new GoogleGenerativeAI(env.GOOGLE_API_KEY ?? "");
+  return googleClient;
 }
 
 async function callOpenAI(request: LLMRequest): Promise<LLMResponse> {
@@ -91,12 +98,45 @@ async function callAnthropic(request: LLMRequest): Promise<LLMResponse> {
   };
 }
 
+async function callGoogle(request: LLMRequest): Promise<LLMResponse> {
+  const client = getGoogleClient();
+  const startTime = Date.now();
+
+  const model = client.getGenerativeModel({
+    model: request.modelId,
+    systemInstruction: request.systemPrompt,
+    generationConfig: {
+      maxOutputTokens: request.maxTokens ?? 4096,
+      temperature: request.temperature ?? 0,
+    },
+  });
+
+  const result = await model.generateContent(request.userPrompt);
+  const response = result.response;
+
+  const latencyMs = Date.now() - startTime;
+
+  const content = response.text();
+  const usageMetadata = response.usageMetadata;
+
+  return {
+    content,
+    latencyMs,
+    tokenUsage: {
+      input: usageMetadata?.promptTokenCount ?? 0,
+      output: usageMetadata?.candidatesTokenCount ?? 0,
+    },
+  };
+}
+
 export async function callLLM(request: LLMRequest): Promise<LLMResponse> {
   switch (request.provider) {
     case "openai":
       return callOpenAI(request);
     case "anthropic":
       return callAnthropic(request);
+    case "google":
+      return callGoogle(request);
     default: {
       const exhaustiveCheck: never = request.provider;
       throw new Error(`Unsupported provider: ${String(exhaustiveCheck)}`);
@@ -131,5 +171,11 @@ export const AVAILABLE_MODELS = {
     { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku" },
     { id: "claude-3-opus-20240229", name: "Claude 3 Opus" },
   ],
+  google: [
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
+    { id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash Lite" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+    { id: "gemini-1.5-flash-8b", name: "Gemini 1.5 Flash 8B" },
+  ],
 } as const;
-

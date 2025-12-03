@@ -23,6 +23,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.0",
     "@clerk/nextjs": "^6.35.5",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^6.19.0",
     "@prisma/client": "^6.6.0",
     "@t3-oss/env-nextjs": "^0.12.0",

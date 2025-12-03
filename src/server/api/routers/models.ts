@@ -37,7 +37,7 @@ export const modelsRouter = createTRPCRouter({
   create: adminProcedure
     .input(
       z.object({
-        provider: z.enum(["openai", "anthropic"]),
+        provider: z.enum(["openai", "anthropic", "google"]),
         modelId: z.string().min(1),
         displayName: z.string().min(1),
         isActive: z.boolean().default(true),
@@ -115,6 +115,11 @@ export const modelsRouter = createTRPCRouter({
       })),
       ...AVAILABLE_MODELS.anthropic.map((m) => ({
         provider: "anthropic" as const,
+        modelId: m.id,
+        displayName: m.name,
+      })),
+      ...AVAILABLE_MODELS.google.map((m) => ({
+        provider: "google" as const,
         modelId: m.id,
         displayName: m.name,
       })),

@@ -5,7 +5,7 @@ import { api } from "@/trpc/react";
 
 export default function ModelsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [provider, setProvider] = useState<"openai" | "anthropic">("openai");
+  const [provider, setProvider] = useState<"openai" | "anthropic" | "google">("openai");
   const [modelId, setModelId] = useState("");
   const [displayName, setDisplayName] = useState("");
 
@@ -51,8 +51,8 @@ export default function ModelsPage() {
   };
 
   const openaiModels = models?.filter((m) => m.provider === "openai") ?? [];
-  const anthropicModels =
-    models?.filter((m) => m.provider === "anthropic") ?? [];
+  const anthropicModels = models?.filter((m) => m.provider === "anthropic") ?? [];
+  const googleModels = models?.filter((m) => m.provider === "google") ?? [];
 
   return (
     <div className="p-8">
@@ -97,11 +97,12 @@ export default function ModelsPage() {
                 className="input"
                 value={provider}
                 onChange={(e) =>
-                  setProvider(e.target.value as "openai" | "anthropic")
+                  setProvider(e.target.value as "openai" | "anthropic" | "google")
                 }
               >
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
+                <option value="google">Google</option>
               </select>
             </div>
             <div>
@@ -163,7 +164,7 @@ export default function ModelsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-8">
+        <div className="grid grid-cols-3 gap-6">
           {/* OpenAI */}
           <div className="card">
             <div className="flex items-center gap-3 mb-4">
@@ -232,6 +233,57 @@ export default function ModelsPage() {
             ) : (
               <div className="space-y-2">
                 {anthropicModels.map((model) => (
+                  <div
+                    key={model.id}
+                    className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg"
+                  >
+                    <div>
+                      <div className="font-medium text-text-primary">
+                        {model.displayName}
+                      </div>
+                      <div className="text-xs text-text-tertiary">
+                        {model.modelId}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleMutation.mutate({ id: model.id })}
+                        className={`btn text-sm py-1 px-3 ${
+                          model.isActive ? "btn-primary" : "btn-secondary"
+                        }`}
+                      >
+                        {model.isActive ? "Active" : "Inactive"}
+                      </button>
+                      <button
+                        onClick={() => deleteMutation.mutate({ id: model.id })}
+                        className="btn btn-danger text-sm py-1 px-2"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Google */}
+          <div className="card">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-[#4285f4]/20 flex items-center justify-center">
+                <span className="text-lg">🔵</span>
+              </div>
+              <h2 className="text-lg font-semibold text-text-primary">
+                Google
+              </h2>
+            </div>
+            {googleModels.length === 0 ? (
+              <p className="text-text-tertiary text-sm">
+                No Google models configured
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {googleModels.map((model) => (
                   <div
                     key={model.id}
                     className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg"
