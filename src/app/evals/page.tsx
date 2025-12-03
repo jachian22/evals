@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { api } from "@/trpc/react";
 
+const UNGROUPED_KEY = "Ungrouped";
+
 interface AggregateScore {
   microF1?: number;
   microPrecision?: number;
@@ -126,15 +128,34 @@ function NodeGroup({
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
+  const isUngrouped = nodeName === UNGROUPED_KEY;
+
   return (
     <div className="mb-4">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-3 px-4 py-3 bg-surface-secondary hover:bg-surface-tertiary rounded-lg transition-colors"
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+          isUngrouped
+            ? "bg-warning/10 hover:bg-warning/20 border border-warning/30"
+            : "bg-surface-secondary hover:bg-surface-tertiary"
+        }`}
       >
         <ChevronIcon expanded={expanded} />
-        <span className="font-semibold text-text-primary">{nodeName}</span>
-        <span className="text-text-tertiary text-sm">({runs.length} run{runs.length !== 1 ? "s" : ""})</span>
+        <span className={`font-semibold ${isUngrouped ? "text-warning" : "text-text-primary"}`}>
+          {nodeName}
+        </span>
+        <span className="text-text-tertiary text-sm">
+          ({runs.length} run{runs.length !== 1 ? "s" : ""})
+        </span>
+        {isUngrouped && (
+          <Link
+            href="/prompts"
+            onClick={(e) => e.stopPropagation()}
+            className="ml-auto text-sm text-warning hover:text-warning/80 underline"
+          >
+            Assign nodes in Prompts →
+          </Link>
+        )}
       </button>
 
       {expanded && (
@@ -209,7 +230,7 @@ export default function EvalsPage() {
 
     const groups: GroupedRuns = {};
     for (const run of evalRuns.runs) {
-      const node = run.prompt.node ?? "Ungrouped";
+      const node = run.prompt.node ?? UNGROUPED_KEY;
       groups[node] ??= [];
       groups[node].push(run);
     }
@@ -221,8 +242,8 @@ export default function EvalsPage() {
   const sortedNodeNames = useMemo(() => {
     const names = Object.keys(groupedRuns);
     return names.sort((a, b) => {
-      if (a === "Ungrouped") return 1;
-      if (b === "Ungrouped") return -1;
+      if (a === UNGROUPED_KEY) return 1;
+      if (b === UNGROUPED_KEY) return -1;
       return a.localeCompare(b);
     });
   }, [groupedRuns]);

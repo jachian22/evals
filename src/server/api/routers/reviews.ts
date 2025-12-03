@@ -27,7 +27,7 @@ export const reviewsRouter = createTRPCRouter({
           evalRun: {
             select: {
               id: true,
-              prompt: { select: { name: true, version: true } },
+              prompt: { select: { name: true, version: true, node: true } },
               modelConfig: { select: { displayName: true } },
             },
           },

@@ -79,6 +79,12 @@ export default function EvalDetailPage({
             Evaluation Results
           </h1>
           <div className="flex items-center gap-4 mt-2">
+            {run.prompt.node && (
+              <>
+                <span className="badge badge-neutral">{run.prompt.node}</span>
+                <span className="text-text-tertiary">•</span>
+              </>
+            )}
             <span className="text-text-secondary">{run.dataset.name}</span>
             <span className="text-text-tertiary">•</span>
             <span className="text-text-secondary">

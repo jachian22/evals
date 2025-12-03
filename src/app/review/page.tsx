@@ -151,6 +151,9 @@ function ReviewPageContent() {
                       {result.document.name}
                     </div>
                     <div className="text-xs text-text-tertiary mt-1">
+                      {result.evalRun.prompt.node && (
+                        <span className="text-text-secondary">{result.evalRun.prompt.node} • </span>
+                      )}
                       {result.evalRun.modelConfig.displayName} •{" "}
                       {result.evalRun.prompt.name}
                     </div>
@@ -186,10 +189,17 @@ function ReviewPageContent() {
                     <h3 className="text-lg font-semibold text-text-primary">
                       {resultData.document.name}
                     </h3>
-                    <div className="text-sm text-text-tertiary">
-                      {resultData.evalRun.modelConfig.displayName} •{" "}
-                      {resultData.evalRun.prompt.name} v
-                      {resultData.evalRun.prompt.version}
+                    <div className="text-sm text-text-tertiary flex items-center gap-2">
+                      {resultData.evalRun.prompt.node && (
+                        <span className="badge badge-neutral text-xs">
+                          {resultData.evalRun.prompt.node}
+                        </span>
+                      )}
+                      <span>
+                        {resultData.evalRun.modelConfig.displayName} •{" "}
+                        {resultData.evalRun.prompt.name} v
+                        {resultData.evalRun.prompt.version}
+                      </span>
                     </div>
                   </div>
                   <Link

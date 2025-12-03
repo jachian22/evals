@@ -12,6 +12,7 @@ export default function PromptDetailPage({
   const { id } = use(params);
   const [systemPrompt, setSystemPrompt] = useState("");
   const [userPrompt, setUserPrompt] = useState("");
+  const [node, setNode] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
 
   const utils = api.useUtils();
@@ -33,6 +34,7 @@ export default function PromptDetailPage({
     if (prompt) {
       setSystemPrompt(prompt.systemPrompt);
       setUserPrompt(prompt.userPrompt);
+      setNode(prompt.node ?? "");
     }
   }, [prompt]);
 
@@ -40,10 +42,11 @@ export default function PromptDetailPage({
     if (prompt) {
       const changed =
         systemPrompt !== prompt.systemPrompt ||
-        userPrompt !== prompt.userPrompt;
+        userPrompt !== prompt.userPrompt ||
+        node !== (prompt.node ?? "");
       setHasChanges(changed);
     }
-  }, [systemPrompt, userPrompt, prompt]);
+  }, [systemPrompt, userPrompt, node, prompt]);
 
   const handleSaveNewVersion = () => {
     if (!prompt) return;
@@ -51,6 +54,7 @@ export default function PromptDetailPage({
       name: prompt.name,
       systemPrompt,
       userPrompt,
+      node: node.trim() || undefined,
     });
   };
 
@@ -91,6 +95,9 @@ export default function PromptDetailPage({
           </h1>
           <div className="flex items-center gap-3 mt-2">
             <span className="badge badge-info">v{prompt.version}</span>
+            {prompt.node && (
+              <span className="badge badge-neutral">{prompt.node}</span>
+            )}
             <span className="text-text-tertiary text-sm">
               Created {new Date(prompt.createdAt).toLocaleDateString()}
             </span>
@@ -112,6 +119,22 @@ export default function PromptDetailPage({
       <div className="grid grid-cols-4 gap-8">
         {/* Editor */}
         <div className="col-span-3 space-y-6">
+          <div className="card">
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Node{" "}
+              <span className="text-text-tertiary font-normal">
+                (experiment group for organizing evaluations)
+              </span>
+            </label>
+            <input
+              type="text"
+              className="input"
+              value={node}
+              onChange={(e) => setNode(e.target.value)}
+              placeholder="e.g., Named Entity Extraction"
+            />
+          </div>
+
           <div className="card">
             <label className="block text-sm font-medium text-text-secondary mb-2">
               System Prompt

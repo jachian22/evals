@@ -183,5 +183,22 @@ export const promptsRouter = createTRPCRouter({
 
       return { success: true };
     }),
+
+  // Update node for all versions of a prompt (doesn't create new version)
+  updateNode: adminProcedure
+    .input(
+      z.object({
+        name: z.string(),
+        node: z.string().nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const result = await ctx.db.promptTemplate.updateMany({
+        where: { name: input.name },
+        data: { node: input.node },
+      });
+
+      return { success: true, updatedCount: result.count };
+    }),
 });
 

@@ -108,6 +108,7 @@ export default async function Dashboard() {
               <table className="table">
                 <thead>
                   <tr>
+                    <th>Node</th>
                     <th>Dataset</th>
                     <th>Prompt</th>
                     <th>Model</th>
@@ -122,6 +123,15 @@ export default async function Dashboard() {
                     } | null;
                     return (
                       <tr key={run.id}>
+                        <td>
+                          {run.prompt.node ? (
+                            <span className="badge badge-neutral text-xs">
+                              {run.prompt.node}
+                            </span>
+                          ) : (
+                            <span className="text-text-tertiary">—</span>
+                          )}
+                        </td>
                         <td className="font-medium">{run.dataset.name}</td>
                         <td>
                           {run.prompt.name} v{run.prompt.version}
