@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "allotment/dist/style.css";
 
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
@@ -150,4 +151,55 @@ body {
 
 .metric-label {
   @apply text-sm text-text-tertiary;
+}
+
+/* Allotment (Split Pane) Customization */
+.split-view-view {
+  background: var(--color-bg-primary);
+}
+
+[data-allotment-component="sash"] {
+  background: var(--color-border) !important;
+  transition: background-color 150ms ease;
+}
+
+[data-allotment-component="sash"]:hover,
+[data-allotment-component="sash"]:active {
+  background: var(--color-accent) !important;
+}
+
+[data-allotment-component="sash"]::before {
+  background: transparent !important;
+}
+
+/* PDF Text Layer customization */
+.react-pdf__Page__textContent {
+  user-select: text !important;
+}
+
+.react-pdf__Page__textContent span::selection {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+/* Animation utilities */
+@keyframes flash-highlight {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: var(--color-accent-muted); }
+}
+
+.animate-flash {
+  animation: flash-highlight 0.5s ease-in-out 2;
+}
+
+/* Entity row transitions */
+.entity-row-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.entity-row-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease, transform 200ms ease;
 }
