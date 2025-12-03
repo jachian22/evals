@@ -73,13 +73,13 @@ export function ReviewQueue({
             {result.document.name}
           </div>
           <div className="text-xs text-text-tertiary mt-1 flex items-center gap-1 flex-wrap">
-            {result.evalRun.prompt.node && (
+            {result.evalRun.prompt?.node && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-bg-elevated text-text-secondary text-[10px]">
                 {result.evalRun.prompt.node}
               </span>
             )}
             <span className="truncate">
-              {result.evalRun.modelConfig.displayName}
+              {result.evalRun.modelConfig?.displayName ?? "Unknown Model"}
             </span>
           </div>
         </button>

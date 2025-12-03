@@ -264,9 +264,9 @@ function ReviewPageContent() {
               <div className="h-full flex flex-col bg-bg-primary">
                 <EntityPanel
                   documentName={resultData.document.name}
-                  modelName={resultData.evalRun.modelConfig.displayName}
-                  promptName={`${resultData.evalRun.prompt.name} v${resultData.evalRun.prompt.version}`}
-                  promptNode={resultData.evalRun.prompt.node}
+                  modelName={resultData.evalRun.modelConfig?.displayName ?? "Unknown Model"}
+                  promptName={`${resultData.evalRun.prompt?.name ?? "Unknown"} v${resultData.evalRun.prompt?.version ?? "?"}`}
+                  promptNode={resultData.evalRun.prompt?.node}
                   entities={entityStates}
                   onEntityAccept={handleEntityAccept}
                   onEntityReject={handleEntityReject}
