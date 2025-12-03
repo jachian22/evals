@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, Suspense, useMemo } from "react";
+import { useState, useCallback, Suspense, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { api } from "@/trpc/react";
@@ -72,6 +72,48 @@ function ReviewPageContent() {
       setNotes("");
     },
   });
+
+  // DEBUG: Log queue data when it loads
+  useEffect(() => {
+    if (queue) {
+      console.log("[DEBUG] Queue loaded:", {
+        resultsCount: queue.results.length,
+        firstResult: queue.results[0],
+        // Check structure of first result
+        firstResultStructure: queue.results[0] ? {
+          hasDocument: !!queue.results[0].document,
+          hasEvalRun: !!queue.results[0].evalRun,
+          hasPrompt: !!queue.results[0].evalRun?.prompt,
+          hasModelConfig: !!queue.results[0].evalRun?.modelConfig,
+          promptValue: queue.results[0].evalRun?.prompt,
+          modelConfigValue: queue.results[0].evalRun?.modelConfig,
+        } : null,
+      });
+    }
+  }, [queue]);
+
+  // DEBUG: Log when selection changes
+  useEffect(() => {
+    console.log("[DEBUG] Selection changed:", { selectedResultId });
+  }, [selectedResultId]);
+
+  // DEBUG: Log result data when it loads
+  useEffect(() => {
+    if (resultData) {
+      console.log("[DEBUG] Result data loaded:", {
+        id: resultData.id,
+        hasDocument: !!resultData.document,
+        documentName: resultData.document?.name,
+        hasEvalRun: !!resultData.evalRun,
+        evalRunStructure: resultData.evalRun ? {
+          hasPrompt: !!resultData.evalRun.prompt,
+          hasModelConfig: !!resultData.evalRun.modelConfig,
+          prompt: resultData.evalRun.prompt,
+          modelConfig: resultData.evalRun.modelConfig,
+        } : null,
+      });
+    }
+  }, [resultData]);
 
   // Initialize entity states when result data loads
   const initializeEntityStates = useCallback((entities: Entity[]) => {
@@ -265,10 +307,10 @@ function ReviewPageContent() {
             <AllotmentModule.Pane minSize={300}>
               <div className="h-full flex flex-col bg-bg-primary">
                 <EntityPanel
-                  documentName={resultData.document.name}
-                  modelName={resultData.evalRun.modelConfig?.displayName ?? "Unknown Model"}
-                  promptName={`${resultData.evalRun.prompt?.name ?? "Unknown"} v${resultData.evalRun.prompt?.version ?? "?"}`}
-                  promptNode={resultData.evalRun.prompt?.node}
+                  documentName={resultData.document?.name ?? "Unknown Document"}
+                  modelName={resultData.evalRun?.modelConfig?.displayName ?? "Unknown Model"}
+                  promptName={`${resultData.evalRun?.prompt?.name ?? "Unknown"} v${resultData.evalRun?.prompt?.version ?? "?"}`}
+                  promptNode={resultData.evalRun?.prompt?.node}
                   entities={entityStates}
                   onEntityAccept={handleEntityAccept}
                   onEntityReject={handleEntityReject}
@@ -297,11 +339,17 @@ function ReviewPageContent() {
 
             {/* Right Panel: PDF Viewer */}
             <AllotmentModule.Pane minSize={400}>
-              <PDFViewer
-                documentId={resultData.document.id}
-                highlightedEntity={hoveredEntity}
-                onBoundingBoxClick={handleBoundingBoxClick}
-              />
+              {resultData.document?.id ? (
+                <PDFViewer
+                  documentId={resultData.document.id}
+                  highlightedEntity={hoveredEntity}
+                  onBoundingBoxClick={handleBoundingBoxClick}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center bg-bg-tertiary">
+                  <div className="text-text-tertiary text-sm">Document not available</div>
+                </div>
+              )}
             </AllotmentModule.Pane>
           </AllotmentModule>
         )}

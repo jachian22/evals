@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 
 interface QueueResult {
@@ -8,7 +9,7 @@ interface QueueResult {
     id: string;
     name: string;
     originalName: string;
-  };
+  } | null;
   evalRun: {
     id: string;
     prompt: {
@@ -19,7 +20,7 @@ interface QueueResult {
     modelConfig: {
       displayName: string;
     } | null;
-  };
+  } | null;
 }
 
 interface ReviewQueueProps {
@@ -35,6 +36,25 @@ export function ReviewQueue({
   onSelectResult,
   isLoading,
 }: ReviewQueueProps) {
+  // DEBUG: Log when component renders with its props
+  useEffect(() => {
+    console.log("[DEBUG ReviewQueue] Component rendered:", {
+      isLoading,
+      resultsCount: results.length,
+      results: results.map((r, i) => ({
+        index: i,
+        id: r.id,
+        documentName: r.document?.name,
+        hasEvalRun: !!r.evalRun,
+        evalRunId: r.evalRun?.id,
+        hasPrompt: !!r.evalRun?.prompt,
+        hasModelConfig: !!r.evalRun?.modelConfig,
+        promptNode: r.evalRun?.prompt?.node,
+        modelDisplayName: r.evalRun?.modelConfig?.displayName,
+      })),
+    });
+  }, [results, isLoading]);
+
   if (isLoading) {
     return (
       <div className="p-4">
@@ -70,16 +90,16 @@ export function ReviewQueue({
           }`}
         >
           <div className="font-medium text-text-primary text-sm truncate">
-            {result.document.name}
+            {result.document?.name ?? "Unknown Document"}
           </div>
           <div className="text-xs text-text-tertiary mt-1 flex items-center gap-1 flex-wrap">
-            {result.evalRun.prompt?.node && (
+            {result.evalRun?.prompt?.node && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-bg-elevated text-text-secondary text-[10px]">
                 {result.evalRun.prompt.node}
               </span>
             )}
             <span className="truncate">
-              {result.evalRun.modelConfig?.displayName ?? "Unknown Model"}
+              {result.evalRun?.modelConfig?.displayName ?? "Unknown Model"}
             </span>
           </div>
         </button>
