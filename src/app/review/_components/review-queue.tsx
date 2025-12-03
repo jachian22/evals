@@ -15,10 +15,10 @@ interface QueueResult {
       name: string;
       version: number;
       node: string | null;
-    };
+    } | null;
     modelConfig: {
       displayName: string;
-    };
+    } | null;
   };
 }
 

@@ -99,7 +99,9 @@ function ReviewPageContent() {
   useMemo(() => {
     if (resultData && entityStates.length === 0) {
       const parsed = resultData.parsedOutput as ParsedOutput | null;
-      const entities = parsed?.entities ?? [];
+      // Safely extract entities - ensure it's actually an array
+      const rawEntities = parsed?.entities;
+      const entities = Array.isArray(rawEntities) ? rawEntities : [];
       if (entities.length > 0) {
         initializeEntityStates(entities);
       }

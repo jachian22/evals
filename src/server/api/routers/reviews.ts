@@ -82,7 +82,7 @@ export const reviewsRouter = createTRPCRouter({
       };
     }),
 
-  // Submit a review
+  // Submit a review (uses upsert to handle concurrent submissions)
   submit: adminProcedure
     .input(
       z.object({
@@ -102,9 +102,18 @@ export const reviewsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const review = await ctx.db.humanReview.create({
-        data: {
+      // Use upsert to handle race conditions where another user/tab
+      // may have already submitted a review for this result
+      const review = await ctx.db.humanReview.upsert({
+        where: { evalResultId: input.evalResultId },
+        create: {
           evalResultId: input.evalResultId,
+          score: input.score,
+          entityScores: input.entityScores,
+          notes: input.notes,
+          reviewerId: input.reviewerId,
+        },
+        update: {
           score: input.score,
           entityScores: input.entityScores,
           notes: input.notes,
