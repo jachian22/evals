@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 
 interface QueueResult {
@@ -36,25 +35,6 @@ export function ReviewQueue({
   onSelectResult,
   isLoading,
 }: ReviewQueueProps) {
-  // DEBUG: Log when component renders with its props
-  useEffect(() => {
-    console.log("[DEBUG ReviewQueue] Component rendered:", {
-      isLoading,
-      resultsCount: results.length,
-      results: results.map((r, i) => ({
-        index: i,
-        id: r.id,
-        documentName: r.document?.name,
-        hasEvalRun: !!r.evalRun,
-        evalRunId: r.evalRun?.id,
-        hasPrompt: !!r.evalRun?.prompt,
-        hasModelConfig: !!r.evalRun?.modelConfig,
-        promptNode: r.evalRun?.prompt?.node,
-        modelDisplayName: r.evalRun?.modelConfig?.displayName,
-      })),
-    });
-  }, [results, isLoading]);
-
   if (isLoading) {
     return (
       <div className="p-4">

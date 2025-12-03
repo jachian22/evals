@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, Suspense, useMemo, useEffect } from "react";
+import { useState, useCallback, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { api } from "@/trpc/react";
@@ -73,48 +73,6 @@ function ReviewPageContent() {
       setNotes("");
     },
   });
-
-  // DEBUG: Log queue data when it loads
-  useEffect(() => {
-    if (queue) {
-      console.log("[DEBUG] Queue loaded:", {
-        resultsCount: queue.results.length,
-        firstResult: queue.results[0],
-        // Check structure of first result
-        firstResultStructure: queue.results[0] ? {
-          hasDocument: !!queue.results[0].document,
-          hasEvalRun: !!queue.results[0].evalRun,
-          hasPrompt: !!queue.results[0].evalRun?.prompt,
-          hasModelConfig: !!queue.results[0].evalRun?.modelConfig,
-          promptValue: queue.results[0].evalRun?.prompt,
-          modelConfigValue: queue.results[0].evalRun?.modelConfig,
-        } : null,
-      });
-    }
-  }, [queue]);
-
-  // DEBUG: Log when selection changes
-  useEffect(() => {
-    console.log("[DEBUG] Selection changed:", { selectedResultId });
-  }, [selectedResultId]);
-
-  // DEBUG: Log result data when it loads
-  useEffect(() => {
-    if (resultData) {
-      console.log("[DEBUG] Result data loaded:", {
-        id: resultData.id,
-        hasDocument: !!resultData.document,
-        documentName: resultData.document?.name,
-        hasEvalRun: !!resultData.evalRun,
-        evalRunStructure: resultData.evalRun ? {
-          hasPrompt: !!resultData.evalRun.prompt,
-          hasModelConfig: !!resultData.evalRun.modelConfig,
-          prompt: resultData.evalRun.prompt,
-          modelConfig: resultData.evalRun.modelConfig,
-        } : null,
-      });
-    }
-  }, [resultData]);
 
   // Initialize entity states when result data loads
   const initializeEntityStates = useCallback((entities: Entity[]) => {
@@ -251,7 +209,7 @@ function ReviewPageContent() {
       {/* Queue Sidebar */}
       <div className="w-64 flex-shrink-0 border-r border-border bg-bg-secondary flex flex-col">
         <div className="p-4 border-b border-border">
-          <h1 className="text-lg font-bold text-text-primary">Review Queue</h1>
+          <h1 className="text-lg font-bold text-text-primary">Inbox</h1>
           <p className="text-xs text-text-tertiary mt-0.5">
             {stats?.pendingReviews ?? 0} pending • {stats?.totalReviews ?? 0} completed
           </p>

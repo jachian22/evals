@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
+import { api } from "@/trpc/react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: "📊" },
@@ -11,12 +12,13 @@ const navItems = [
   { href: "/prompts", label: "Prompts", icon: "✏️" },
   { href: "/models", label: "Models", icon: "🤖" },
   { href: "/evals", label: "Evaluations", icon: "🧪" },
-  { href: "/review", label: "Review Queue", icon: "👁️" },
+  { href: "/review", label: "Inbox", icon: "📥" },
 ];
 
 export function Navigation() {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
+  const { data: reviewStats } = api.reviews.getStats.useQuery({});
 
   // Hide navigation on auth pages
   const isAuthPage = pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
@@ -58,7 +60,12 @@ export function Navigation() {
                   }`}
                 >
                   <span className="text-base">{item.icon}</span>
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.href === "/review" && reviewStats?.pendingReviews ? (
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-accent text-white">
+                      {reviewStats.pendingReviews > 99 ? "99+" : reviewStats.pendingReviews}
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             );
